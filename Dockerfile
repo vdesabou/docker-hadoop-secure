@@ -1,4 +1,4 @@
-# Creates pseudo distributed kerberized hadoop 2.7.3
+# Creates pseudo distributed kerberized hadoop 3.1.2
 #
 # docker build -t knappek/hadoop-secure .
 
@@ -49,11 +49,11 @@ RUN touch /var/log/kerberos/kadmind.log
 # hadoop
 # download/copy hadoop. Choose one of these options
 ENV HADOOP_PREFIX /usr/local/hadoop
-#RUN curl -L https://archive.apache.org/dist/hadoop/core/hadoop-2.7.3/hadoop-2.7.3.tar.gz | tar -xz -C /usr/local/
-COPY local_files/hadoop-2.7.3.tar.gz $HADOOP_PREFIX-2.7.3.tar.gz
-RUN tar -xzvf $HADOOP_PREFIX-2.7.3.tar.gz -C /usr/local
+#RUN curl -L https://archive.apache.org/dist/hadoop/core/hadoop-3.1.2/hadoop-3.1.2.tar.gz | tar -xz -C /usr/local/
+COPY local_files/hadoop-3.1.2.tar.gz $HADOOP_PREFIX-3.1.2.tar.gz
+RUN tar -xzvf $HADOOP_PREFIX-3.1.2.tar.gz -C /usr/local
 RUN cd /usr/local \
-    && ln -s ./hadoop-2.7.3 hadoop \
+    && ln -s ./hadoop-3.1.2 hadoop \
     && chown root:root -R hadoop/
 
 
@@ -111,18 +111,23 @@ RUN tar -xzf /tmp/apache-maven-3.5.0-bin.tar.gz -C /usr/local
 RUN cd /usr/local && ln -s ./apache-maven-3.5.0/ maven
 ENV PATH $PATH:/usr/local/maven/bin
 
-#RUN curl -L https://downloads.apache.org/hadoop/common/hadoop-2.7.3/hadoop-2.7.3.tar.gz | tar -xz -C /tmp
-COPY local_files/hadoop-2.7.3-src.tar.gz /tmp/hadoop-2.7.3-src.tar.gz
-RUN tar -xzf /tmp/hadoop-2.7.3-src.tar.gz -C /tmp
+#RUN curl -L https://downloads.apache.org/hadoop/common/hadoop-3.1.2/hadoop-3.1.2.tar.gz | tar -xz -C /tmp
+COPY local_files/hadoop-3.1.2-src.tar.gz /tmp/hadoop-3.1.2-src.tar.gz
+RUN tar -xzf /tmp/hadoop-3.1.2-src.tar.gz -C /tmp
 
 # build native hadoop-common libs to remove warnings because of 64 bit OS
 RUN rm -rf $HADOOP_PREFIX/lib/native
-RUN cd /tmp/hadoop-2.7.3-src/hadoop-common-project/hadoop-common \
-    && mvn compile -Pnative \
-    && cp target/native/target/usr/local/lib/libhadoop.a $HADOOP_PREFIX/lib/native \
-    && cp target/native/target/usr/local/lib/libhadoop.so.1.0.0 $HADOOP_PREFIX/lib/native
+# RUN cd /tmp/hadoop-3.1.2-src/hadoop-common-project/hadoop-common \
+#     && mvn compile -Pnative \
+#     && cp target/native/target/usr/local/lib/libhadoop.a $HADOOP_PREFIX/lib/native \
+#     && cp target/native/target/usr/local/lib/libhadoop.so.1.0.0 $HADOOP_PREFIX/lib/native
+RUN rpm -Uv ftp://ftp.pbone.net/mirror/ftp5.gwdg.de/pub/opensuse/repositories/home:/techsysfera:/branches:/home:/doc_bacardi/CentOS_CentOS-6/x86_64/cmake-3.0.0-143.1.x86_64.rpm
+RUN cd /tmp/hadoop-3.1.2-src/hadoop-common-project/hadoop-common \
+    && mvn compile -Pnative
+RUN cp target/native/target/usr/local/lib/libhadoop.a $HADOOP_PREFIX/lib/native
+RUN cp target/native/target/usr/local/lib/libhadoop.so.1.0.0 $HADOOP_PREFIX/lib/native
 # build container-executor binary
-RUN cd /tmp/hadoop-2.7.3-src/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager \
+RUN cd /tmp/hadoop-3.1.2-src/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager \
     && mvn compile -Pnative \
     && cp target/native/target/usr/local/bin/container-executor $HADOOP_PREFIX/bin/ \
     && chmod 6050 $HADOOP_PREFIX/bin/container-executor
