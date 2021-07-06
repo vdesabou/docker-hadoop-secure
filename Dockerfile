@@ -2,17 +2,18 @@
 #
 # docker build -t knappek/hadoop-secure .
 
-FROM sequenceiq/pam:centos-6.5
+#FROM sequenceiq/pam:centos-6.5
+FROM centos:7
 
 USER root
 
-ADD CentOS-Base.repo /etc/yum.repos.d
+#ADD CentOS-Base.repo /etc/yum.repos.d
 # install dev tools
 RUN yum clean all && yum makecache && yum update\
     rpm --rebuilddb; \
     yum install -y curl which tar sudo openssh-server openssh-clients rsync \
     vim rsyslog unzip glibc-devel \
-    glibc-headers gcc-c++ cmake git zlib-devel
+    glibc-headers gcc-c++ cmake git zlib-devel make
 # update libselinux. see https://github.com/sequenceiq/hadoop-docker/issues/14
 RUN yum update -y libselinux
 
@@ -121,11 +122,10 @@ RUN rm -rf $HADOOP_PREFIX/lib/native
 #     && mvn compile -Pnative \
 #     && cp target/native/target/usr/local/lib/libhadoop.a $HADOOP_PREFIX/lib/native \
 #     && cp target/native/target/usr/local/lib/libhadoop.so.1.0.0 $HADOOP_PREFIX/lib/native
-RUN rpm -Uv ftp://ftp.pbone.net/mirror/ftp5.gwdg.de/pub/opensuse/repositories/home:/techsysfera:/branches:/home:/doc_bacardi/CentOS_CentOS-6/x86_64/cmake-3.0.0-143.1.x86_64.rpm
+RUN yum install -y http://repo.okay.com.mx/centos/7/x86_64/release/okay-release-1-1.noarch.rpm && yum install -y cmake3
+RUN ln -sf /usr/bin/cmake3 /usr/bin/cmake
 RUN cd /tmp/hadoop-3.1.2-src/hadoop-common-project/hadoop-common \
-    && mvn compile -Pnative
-RUN cp target/native/target/usr/local/lib/libhadoop.a $HADOOP_PREFIX/lib/native
-RUN cp target/native/target/usr/local/lib/libhadoop.so.1.0.0 $HADOOP_PREFIX/lib/native
+    && mvn compile -Pnative && cp target/native/target/usr/local/lib/libhadoop.a $HADOOP_PREFIX/lib/native && cp target/native/target/usr/local/lib/libhadoop.so.1.0.0 $HADOOP_PREFIX/lib/native
 # build container-executor binary
 RUN cd /tmp/hadoop-3.1.2-src/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager \
     && mvn compile -Pnative \
